@@ -237,8 +237,110 @@ def resultado():
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
-  <!-- ... más configuración de Bootstrap y CSS personalizado ... -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+  <style>
+    /* Remove the navbar's default margin-bottom and rounded borders */ 
+    .navbar {
+      margin-bottom: 0;
+      border-radius: 0;
+    }
+    
+    /* Set height of the grid so .sidenav can be 100% (adjust as needed) */
+    .row.content {height: 450px}
+    
+    /* Set gray background color and 100% height */
+    .sidenav {
+      padding-top: 20px;
+      background-color: #f1f1f1;
+      height: 100%;
+    }
+    
+    /* Set black background color, white text and some padding */
+    footer {
+      background-color: #555;
+      color: white;
+      padding: 15px;
+    }
+    
+    /* On small screens, set height to 'auto' for sidenav and grid */
+    @media screen and (max-width: 767px) {
+      .sidenav {
+        height: auto;
+        padding: 15px;
+      }
+      .row.content {height:auto;} 
+    }
+
+    #tabla {
+     font-family: Arial, Helvetica, sans-serif;
+     border-collapse: collapse;
+     width: 60%;
+     margin-left: auto;
+     margin-right: auto;
+   }
+   
+   #tabla td, #tabla th {
+     border: 1px solid #ddd;
+     padding: 8px;
+   }
+   
+   #tabla tr:nth-child(even){background-color: #f2f2f2;}
+   
+   #tabla tr:hover {background-color: #ddd;}
+   
+   #tabla th {
+     padding-top: 12px;
+     padding-bottom: 12px;
+     text-align: left;
+     background-color: #687772;
+     color: white;
+   }
+
+  </style>
 </head>
+<body>
+
+<nav class="navbar navbar-inverse">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>                        
+      </button>
+      <a class="navbar-brand" href="#">ACTIVIDAD INDIVIDUAL</a>
+    </div>
+    <div class="collapse navbar-collapse" id="myNavbar">
+      <ul class="nav navbar-nav">
+        <li><a href="{{url_for('home')}}">Principal</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+  
+<div class="container-fluid text-center">    
+  <div class="row content">
+    <div class="col-sm-2 sidenav">
+    </div>
+    <div class="col-sm-8 text-left"> 
+      <br><br>
+      {%block contenido%}
+      <br>
+      {%endblock%}
+    </div>
+    <div class="col-sm-2 sidenav">
+    </div>
+  </div>
+</div>
+
+<footer class="container-fluid text-right">
+  <p>{%block pie%}{%endblock%}</p>
+</footer>
+
+</body>
+</html>
+
 ```
 
 **Propósito**: Define la estructura HTML base para todas las páginas, incluyendo:
@@ -252,66 +354,126 @@ def resultado():
 
 #### Login (`login.html`)
 ```html
+{% extends "layout.html" %}
+
+{% block titulo %}HOME{% endblock %}
+
+{% block contenido %}
+
 <form action="{{ url_for('home') }}" method="POST">
     <div class="form-group">
         <label for="nombre">Nombre:</label>
-        <input type="text" id="nombre" name="nombre" required>
+        <input type="text"  id="nombre" name="nombre" required>
     </div>
     <div class="form-group">
         <label for="password">Contraseña:</label>
-        <input type="password" id="password" name="password" required>
+        <input type="password"  id="password" name="password" required>
     </div>
-    <button type="submit">Acceder</button>
+    <button type="submit" >Acceder</button>
 </form>
+{% endblock %}
+
+{% block pie %}
+<a href="{{ url_for('home') }}">Volver a la página de acceso</a>
+{% endblock %}
 ```
 
 **Propósito**: Formulario de autenticación con campos de nombre y contraseña.
 
 #### Opciones (`opciones.html`)
 ```html
+{% extends "layout.html" %}
+
+{% block titulo %}Opciones{% endblock %}
+
+{% block contenido %}
+<p>Hola, {{ nombre }}!</p>
+<p>Aqui tienes una lista  de las siguientes opciones:</p>
+
 <ul>
-    <li><a href="{{ url_for('imagen') }}">Ver una imagen</a></li>
-    <li><a href="{{ url_for('juego') }}">Jugar a un juego de cálculo mental</a></li>
+    <li>
+        <a href="{{ url_for('imagen') }}">Ver una imagen</a>
+    </li>
+    <li>
+        <a href="{{ url_for('juego') }}">Jugar a un juego de cálculo mental</a>
+    </li>
 </ul>
+{% endblock %}
+
+{% block pie %}
+<a href="{{ url_for('home') }}">Volver a la página de acceso</a>
+{% endblock %}
 ```
 
 **Propósito**: Menú principal con opciones disponibles para el usuario.
 
 #### Juego (`juego.html`)
 ```html
+{% extends "layout.html" %}
+
+{% block titulo %}Juego de Cálculo Mental{% endblock %}
+
+{% block contenido %}
+<h1>Hola, {{ nombre }}</h1>
+<p>¿Qué dificultad quieres para el juego de cálculo mental?</p>
+
 <form action="{{ url_for('calcular') }}" method="post">
     <div>
         <input type="radio" name="dificultad" value="facil" checked> 
         Baja (números del 0 al 9)
+        
     </div>
     <div>
         <input type="radio" name="dificultad" value="dificil"> 
         Alta (números del 0 al 99)
+        
     </div>
-    <button type="submit">Enviar</button>
+    <button type="submit" >Enviar</button>
 </form>
+{% endblock %}
+
+{% block pie %}
+<a href="{{ url_for('home') }}">Volver a la página de acceso</a>
+{% endblock %}
 ```
 
 **Propósito**: Permite seleccionar la dificultad del juego mediante botones de radio.
 
 #### Cálculo (`calcular.html`)
 ```html
+{% extends "layout.html" %}
+
+{% block titulo %}Cálculo Mental{% endblock %}
+
+{% block contenido %}
+
+
 <div>
     <p>{{ num1 }} + {{ num2 }} = ?</p>
 </div>
 
 <form action="{{ url_for('resultado') }}" method="post">
     <div>
-        <input type="number" id="resultado" name="resultado" required>
+        <input type="number"  id="resultado" name="resultado" required>
     </div>
-    <button type="submit">Comprobar</button>
+    <button type="submit" >Comprobar</button>
 </form>
+{% endblock %}
+
+{% block pie %}
+<a href="{{ url_for('home') }}">Volver a la página de acceso</a>
+{% endblock %}
 ```
 
 **Propósito**: Presenta el problema matemático y campo para ingresar la respuesta.
 
 #### Resultado (`resultado.html`)
 ```html
+{% extends "layout.html" %}
+
+{% block titulo %}Resultado{% endblock %}
+
+{% block contenido %}
 <table id="tabla" class="table table-bordered">
     <thead>
         <tr>
@@ -330,6 +492,15 @@ def resultado():
         {% endfor %}
     </tbody>
 </table>
+
+<div>
+    <a href="{{ url_for('juego') }}" >Volver a jugar al calculo mental</a>
+</div>
+{% endblock %}
+
+{% block pie %}
+<a href="{{ url_for('home') }}">Volver a la página de acceso</a>
+{% endblock %}
 ```
 
 **Propósito**: Muestra el historial de todos los intentos del usuario en formato tabla.
