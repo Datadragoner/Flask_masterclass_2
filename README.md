@@ -505,6 +505,25 @@ def resultado():
 
 **Propósito**: Muestra el historial de todos los intentos del usuario en formato tabla.
 
+#### Resultado (`imagen.html`)
+```html
+{% extends "layout.html" %}
+
+{% block titulo %}Imagen{% endblock %}
+
+{% block contenido %}
+<div class="text-center">
+    <img src="https://th.bing.com/th/id/R.8a54d74558e044f7f8e8e2b0d67e0477?rik=%2bY7d9IvlTQlPYA&riu=http%3a%2f%2f2.bp.blogspot.com%2f-JiS5KljMDTA%2fVcSoIUNTaMI%2fAAAAAAAAAGw%2fWEGx3fz7QUI%2fs1600%2fboo2.jpg&ehk=E8gCqQeXDNA03FrnghNZytlOI6KNRr3O6v8Ep%2bqSafI%3d&risl=&pid=ImgRaw&r=0" class="img-responsive center-block" alt="Imagen">
+</div>
+{% endblock %}
+
+{% block pie %}
+<a href="{{ url_for('home') }}">Volver a la página de acceso</a>
+{% endblock %}
+```
+
+**Propósito**: Muestra una imagen al usuario.
+
 ## 🎮 Cómo Usar la Aplicación
 
 1. **Acceso**: Ingresa cualquier nombre y la contraseña "1234"
