@@ -309,7 +309,7 @@ def resultado():
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>                        
       </button>
-      <a class="navbar-brand" href="#">ACTIVIDAD INDIVIDUAL</a>
+      <a class="navbar-brand" href="#">CALCULO MENTAL</a>
     </div>
     <div class="collapse navbar-collapse" id="myNavbar">
       <ul class="nav navbar-nav">
