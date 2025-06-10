@@ -1,5 +1,470 @@
 # Flask_masterclass_2
 
+Perfecto, aquí tienes el README completo, listo para copiar y pegar directamente en tu repositorio GitHub. Está formateado para que se vea profesional, con todo el código explicado y muy claro, al estilo del ejemplo que me diste.
+
+---
+
+````markdown
+# 📚 Biblioteca Personal
+
+> Proyecto web realizado con Flask para que los usuarios puedan registrar y consultar los libros que han leído.  
+> Utiliza una base de datos SQLite para almacenar la información y cuenta con autenticación básica mediante contraseña.
+
+---
+
+## 🛠️ Requisitos Previos
+
+Para ejecutar esta aplicación necesitas:
+
+- **Python 3.x** instalado en tu sistema.
+- La librería **Flask** instalada.  
+  Puedes instalarla con:
+  ```bash
+  pip install flask
+````
+
+---
+
+## 📁 Estructura del proyecto
+
+```
+biblioteca/
+│
+├── app.py            # Código principal de la aplicación Flask
+├── lecturas.db       # Base de datos SQLite (se crea automáticamente)
+├── templates/        # Carpeta con los archivos HTML (templates)
+│   ├── layout.html
+│   ├── login.html
+│   ├── opciones.html
+│   ├── registrar_libro.html
+│   └── libros.html
+```
+
+---
+
+## 💻 Código completo y explicado (`app.py`)
+
+### 1️⃣ Importación de módulos y configuración inicial
+
+```python
+from flask import Flask, render_template, request, redirect, url_for, session
+import sqlite3  # Para gestionar base de datos SQLite
+
+# Crear instancia de Flask
+app = Flask(__name__)
+
+# Clave secreta necesaria para manejar sesiones seguras en Flask
+app.secret_key = "your_secret_key"
+```
+
+> **Explicación:**
+> Importamos Flask y sus herramientas para crear rutas, manejar plantillas y sesiones.
+> También importamos `sqlite3` para manipular la base de datos local.
+> La clave secreta es fundamental para que Flask pueda cifrar y proteger los datos de sesión del usuario.
+
+---
+
+### 2️⃣ Creación de la base de datos y tabla (si no existen)
+
+```python
+def create_db():
+    """
+    Esta función crea la base de datos 'lecturas.db' y la tabla 'libros'
+    con las columnas necesarias para almacenar la información de los libros,
+    sólo si no existen previamente.
+    """
+    conn = sqlite3.connect('lecturas.db')  # Abrir conexión con la base de datos SQLite
+    cursor = conn.cursor()
+
+    # Crear tabla 'libros' con las columnas:
+    # id (clave primaria autoincremental),
+    # nombre_usuario (texto),
+    # titulo (texto),
+    # autor (texto),
+    # fecha (texto),
+    # valoracion (booleano).
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS libros (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nombre_usuario TEXT NOT NULL,
+        titulo TEXT NOT NULL,
+        autor TEXT NOT NULL,
+        fecha TEXT NOT NULL,
+        valoracion BOOLEAN NOT NULL           
+    )
+    ''')
+
+    conn.commit()  # Guardar cambios
+    conn.close()   # Cerrar conexión a la base de datos
+```
+
+---
+
+### 3️⃣ Función para insertar un nuevo libro en la base
+
+```python
+def insert_libro(nombre_usuario, titulo, autor, fecha, valoracion):
+    """
+    Inserta un nuevo registro de libro en la base de datos para un usuario dado.
+    Parámetros:
+    - nombre_usuario: str, nombre del usuario que añade el libro.
+    - titulo: str, título del libro.
+    - autor: str, autor del libro.
+    - fecha: str, fecha en formato YYYY-MM-DD cuando fue leído.
+    - valoracion: bool o int, valoración del libro (ej. 0-10).
+    """
+    conn = sqlite3.connect('lecturas.db')
+    cursor = conn.cursor()
+
+    cursor.execute(
+        'INSERT INTO libros (nombre_usuario, titulo, autor, fecha, valoracion) VALUES (?, ?, ?, ?, ?)',
+        (nombre_usuario, titulo, autor, fecha, valoracion)
+    )
+
+    conn.commit()  # Confirmar inserción
+    conn.close()   # Cerrar conexión
+```
+
+---
+
+### 4️⃣ Función para obtener libros de un usuario
+
+```python
+def user_libros(nombre):
+    """
+    Recupera todos los libros asociados a un usuario específico.
+    Parámetro:
+    - nombre: str, nombre del usuario.
+    
+    Retorna:
+    - lista de tuplas con (titulo, autor, fecha, valoracion).
+    """
+    conn = sqlite3.connect('lecturas.db')
+    cursor = conn.cursor()
+
+    cursor.execute('SELECT titulo, autor, fecha, valoracion FROM libros WHERE nombre_usuario = ?', (nombre,))
+    libros = cursor.fetchall()
+
+    conn.close()
+    return libros
+```
+
+---
+
+### 5️⃣ Ruta principal `/` — Login
+
+```python
+@app.route('/', methods=['GET', 'POST'])
+def home():
+    """
+    Página de inicio y login.
+    Si se recibe una petición POST, valida la contraseña ingresada.
+    Si es correcta, guarda el nombre del usuario en la sesión y redirige al menú.
+    Si es incorrecta, muestra un error.
+    """
+    error = None
+
+    if request.method == 'POST':
+        nombre = request.form['nombre']
+        password = request.form['password']
+
+        if password == 'biblioteca2025':  # Contraseña fija para acceso
+            session['nombre'] = nombre  # Guardar usuario en sesión para mantener estado
+            return redirect(url_for('opciones'))
+        else:
+            error = "Acceso denegado."  # Mensaje de error si contraseña es incorrecta
+
+    # Renderizar formulario de login, mostrando error si existe
+    return render_template('login.html', error=error)
+```
+
+---
+
+### 6️⃣ Ruta `/opciones` — Menú principal tras login
+
+```python
+@app.route('/opciones')
+def opciones():
+    """
+    Muestra el menú de opciones para el usuario autenticado.
+    Si no hay usuario en sesión, redirige al login.
+    """
+    if 'nombre' not in session:
+        return redirect(url_for('home'))
+
+    nombre = session['nombre']
+    return render_template('opciones.html', nombre=nombre)
+```
+
+---
+
+### 7️⃣ Ruta `/registrar_libro` — Formulario para añadir libros
+
+```python
+@app.route('/registrar_libro', methods=['GET', 'POST'])
+def registrar_libro():
+    """
+    Permite al usuario añadir un libro nuevo.
+    Si el método es POST, procesa el formulario y guarda el libro.
+    Si es GET, muestra el formulario para registrar el libro.
+    """
+    if 'nombre' not in session:
+        return redirect(url_for('home'))
+
+    nombre_usuario = session['nombre']
+
+    if request.method == 'POST':
+        titulo = request.form['titulo']
+        autor = request.form['autor']
+        fecha = request.form['fecha']
+        valoracion = request.form.get('valoracion', False)
+
+        insert_libro(nombre_usuario, titulo, autor, fecha, valoracion)
+        return redirect(url_for('libros'))
+
+    return render_template('registrar_libro.html')
+```
+
+---
+
+### 8️⃣ Ruta `/libros` — Mostrar libros registrados por usuario
+
+```python
+@app.route('/libros')
+def libros():
+    """
+    Muestra todos los libros registrados por el usuario actualmente en sesión.
+    Si no hay sesión, redirige al login.
+    """
+    if 'nombre' not in session:
+        return redirect(url_for('home'))
+
+    nombre_usuario = session['nombre']
+    libros_usuario = user_libros(nombre_usuario)
+
+    return render_template('libros.html', libros=libros_usuario)
+```
+
+---
+
+### 9️⃣ Arranque de la aplicación
+
+```python
+if __name__ == '__main__':
+    create_db()  # Crear base y tabla antes de iniciar la app
+    app.run(debug=True)  # Ejecutar servidor Flask en modo debug (ver cambios al vuelo)
+```
+
+---
+
+## 🖼️ Archivos HTML en `templates/`
+
+### `layout.html` — Plantilla base común
+
+```html
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% block titulo %}Biblioteca Personal{% endblock %}</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <style>
+    body {
+      background-color: #f8f9fa;
+    }
+    .navbar {
+      background-color: #0d6efd;
+    }
+    .navbar-brand, .nav-link, footer {
+      color: white !important;
+    }
+    .main-content {
+      padding: 30px;
+    }
+    footer {
+      background-color: #343a40;
+      padding: 15px;
+      text-align: center;
+      color: #ccc;
+    }
+    table {
+      margin: auto;
+      width: 70%;
+    }
+    table th {
+      background-color: #0d6efd;
+      color: white;
+    }
+    table tr:nth-child(even) {
+      background-color: #f2f2f2;
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="{{ url_for('home') }}">Biblioteca Personal</a>
+    </div>
+  </nav>
+
+  <div class="container main-content">
+    {% block contenido %}{% endblock %}
+  </div>
+
+  <footer>
+    <p>{% block pie %}Volver a <a href="{{ url_for('home') }}" style="color: #aad;">inicio</a>{% endblock %}</p>
+  </footer>
+</body>
+</html>
+```
+
+---
+
+### `login.html` — Formulario de inicio de sesión
+
+```html
+{% extends "layout.html" %}
+
+{% block titulo %}Iniciar sesión{% endblock %}
+
+{% block contenido %}
+<h2>Iniciar sesión</h2>
+
+<form method="POST" class="w-50 mx-auto">
+  <div class="mb-3">
+    <label for="nombre" class="form-label">Nombre</label>
+    <input type="text" id="nombre" name="nombre" class="form-control" required />
+  </div>
+
+  <div class="mb-3">
+    <label for="password" class="form-label">Contraseña</label>
+    <input type="password" id="password" name="password" class="form-control" required />
+  </div>
+
+  <button type="submit" class="btn btn-primary">Entrar</button>
+</form>
+
+{% if error %}
+  <div class="alert alert-danger mt-3 w-50 mx-auto" role="alert">{{ error }}</div>
+{% endif %}
+{% endblock %}
+```
+
+---
+
+### `opciones.html` — Menú principal tras login
+
+```html
+{% extends "layout.html" %}
+
+{% block titulo %}Menú principal{% endblock %}
+
+{% block contenido %}
+<h2>¡Hola, {{ nombre }}!</h2>
+
+<ul class="list-group w-50 mx-auto">
+  <li class="list-group-item">
+    <a href="{{ url_for('registrar_libro') }}">Registrar un nuevo libro</a>
+  </li>
+  <li class="list-group-item">
+    <a href="{{ url_for('libros') }}">Ver libros registrados</a>
+  </li>
+</ul>
+{% endblock %}
+```
+
+---
+
+### `registrar_libro.html` — Formulario para registrar libro
+
+```html
+{% extends "layout.html" %}
+
+{% block titulo %}Registrar Libro{% endblock %}
+
+{% block contenido %}
+<h2>Registrar un nuevo libro</h2>
+
+<form method="POST" class="w-50 mx-auto">
+  <div class="mb-3">
+    <label for="titulo" class="form-label">Título</label>
+    <input type="text" id="titulo" name="titulo" class="form-control" required />
+  </div>
+
+  <div class="mb-3">
+    <label for="autor" class="form-label">Autor</label>
+    <input type="text" id="autor" name="autor" class="form-control" required />
+  </div>
+
+  <div class="mb-3">
+    <label for="fecha" class="form-label">Fecha de lectura</label>
+    <input type="date" id="fecha" name="fecha" class="form-control" required />
+  </div>
+
+  <div class="mb-3">
+    <label for="valoracion" class="form-label">Valoración (0-10)</label>
+    <input type="number" id="valoracion" name="valoracion" min="0" max="10" class="form-control" required />
+  </div>
+
+  <button type="submit" class="btn btn-success">Guardar libro</button>
+</form>
+{% endblock %}
+```
+
+---
+
+### `libros.html` — Mostrar libros registrados
+
+```html
+{% extends "layout.html" %}
+
+{% block titulo %}Libros registrados{% endblock %}
+
+{% block contenido %}
+<h2>Libros que has registrado</h2>
+
+{% if libros %}
+<table class="table table-striped table-bordered w-75 mx-auto">
+  <thead>
+    <tr>
+      <th>Título</th>
+      <th>Autor</th>
+      <th>Fecha</th>
+      <th>Valoración</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for libro in libros %}
+    <tr>
+      <td>{{ libro[0] }}</td>
+      <td>{{ libro[1] }}</td>
+      <td>{{ libro[2] }}</td>
+      <td>{{ libro[3] }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p class="text-center">No has registrado ningún libro todavía.</p>
+{% endif %}
+
+<div class="text-center mt-3">
+  <a href="{{ url_for('registrar_libro') }}" class="btn btn-primary">Registrar otro libro</a>
+</div>
+{% endblock %}
+```
+
+---
+
+## ✅ Conclusión
+
+Esta aplicación básica muestra cómo construir un sistema sencillo de registro y consulta de libros con autenticación, persistencia en base de datos SQLite y uso de plantillas con Flask. Puedes extenderla fácilmente añadiendo funcionalidades como edición, borrado, múltiples usuarios, etc.
+
+
+
+
+
 # Aplicación Flask de Cálculo Mental
 
 Una aplicación web desarrollada en Flask que permite a los usuarios jugar un juego de cálculo mental con diferentes niveles de dificultad y mantener un registro de sus intentos.
