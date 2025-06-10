@@ -1,8 +1,6 @@
 # Flask_masterclass_2
 
-Perfecto, aquí tienes el README completo, listo para copiar y pegar directamente en tu repositorio GitHub. Está formateado para que se vea profesional, con todo el código explicado y muy claro, al estilo del ejemplo que me diste.
 
----
 
 ````markdown
 # 📚 Biblioteca Personal
